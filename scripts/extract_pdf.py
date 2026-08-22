@@ -21,6 +21,12 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+# Windows 控制台默认 GBK, 输出含 Å/希腊字母等会崩溃 — 强制 UTF-8
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
 try:
     import fitz  # PyMuPDF
 except ImportError:

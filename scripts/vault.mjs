@@ -108,6 +108,16 @@ function noteBodyAssembly(meta, sections, figures, zoteroUid) {
       lines.push('');
       lines.push('**研究价值**：<!-- 对领域/对本方向的价值 -->');
       lines.push('');
+      lines.push('**关键公式**：');
+      lines.push('');
+      lines.push('<!-- 本节定义式/控制方程/关键推导结果, 用 LaTeX: 行内 $…$、行间 $$…$$。每个公式后加 1-2 句说明其含义。例子:');
+      lines.push('');
+      lines.push('$$');
+      lines.push('\\frac{\\partial \\rho}{\\partial t} + \\nabla\\cdot(\\rho\\mathbf{u}) = 0');
+      lines.push('$$');
+      lines.push('');
+      lines.push('表示质量守恒: 密度的时间变化率与质量通量散度之和为零。 -->');
+      lines.push('');
     }
   } else {
     lines.push('<!-- 未识别到章节标题, 请按论文实际结构手动拆分, 逐节填写 -->');
@@ -171,8 +181,10 @@ async function main() {
   ]);
 
   // 1) 目标目录: vaultRoot / notesRoot / collections... / (条目目录: 短标题+年份)
-  const collSegs = (meta.collections ?? []).map((c) => sanitize(c, 60));
-  const titleSeg = folderName(meta);
+  //    注意: Windows 会剥离路径组件尾部的 . 和空格 (如 "K. N." 会被规范化为 "K. N"),
+  //    导致 Obsidian/PowerShell/Python 无法访问 → 此处统一去掉尾部 . / 空格
+  const collSegs = (meta.collections ?? []).map((c) => sanitize(c, 60)).map((s) => s.replace(/[. ]+$/, ''));
+  const titleSeg = folderName(meta).replace(/[. ]+$/, '');
   const noteDir = path.join(vaultRoot, notesRoot, ...collSegs, titleSeg);
   const assetsDir = path.join(noteDir, assetsDirName, meta.key);
   const notePath = path.join(noteDir, `${titleSeg}.md`);
@@ -205,6 +217,13 @@ async function main() {
   ].join('\n');
   await writeFile(finalNote, body, 'utf8');
 
+  // 4) 公式 $ 配对快速校验（奇数提示 agent 修正 LaTeX）
+  let mathWarn = null;
+  const dollars = (body.match(/\$/g) ?? []).length;
+  if (dollars % 2 !== 0) {
+    mathWarn = `公式美元符号数为奇数 (${dollars}), 笔记中的 $ 未配对, 请检查 LaTeX`;
+  }
+
   // 4) 同时把 extract 全文/JSON 拷入工作区, 供 agent 继续精读 (不进入 vault)
   console.log(JSON.stringify({
     ok: true,
@@ -213,7 +232,8 @@ async function main() {
     figuresCopied: copied.length,
     figuresTotal: figures.length,
     captionsMissing: figures.length ? 0 : null,
-    nextSteps: ['读取 fulltext.md 精读全文', '逐节填写章节笔记', '逐图解说', '添加 [[wikilink]] 关联笔记'],
+    mathWarn,
+    nextSteps: ['读取 fulltext.md 精读全文', '逐节填写章节笔记（含关键公式, LaTeX 行内 $…$ / 行间 $$…$$）', '逐图解说', '语言规范审查（§7.1）', '添加 [[wikilink]] 关联笔记'],
   }, null, 2));
 }
 

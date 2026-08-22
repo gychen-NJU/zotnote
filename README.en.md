@@ -14,7 +14,9 @@ Zotero item ──▶ PDF (local storage first) ──▶ section/figure extract
 - **Pick and read**: search Zotero items by title / author / keyword; one command runs the whole pipeline
 - **Batch incremental (new!)**: `batch.mjs --collection <dir>` processes *all* articles in a Zotero collection, **auto-skipping those with existing notes** (detected via the `item-key` in Vault note frontmatter — renaming/moving notes never misjudges), idempotent with resume; `--recursive` for sub-collections, `--limit` for batching
 - **Illustrated**: auto-locates and crops every figure/table (caption-aware) — raster images by embedded-image bbox, vector figures by drawing-cluster bbox; 300 dpi exports and a manual `crop` subcommand
-- **Section-by-section template**: each § reserves *main content / scientific question / methods / properties & conclusions / research value*; each figure reserves *content / panel-by-panel explanation / scientific meaning*, with the original caption quoted
+- **Section-by-section template**: each § reserves *main content / scientific question / methods / properties & conclusions / research value / **key formulas***; each figure reserves *content / panel-by-panel explanation / scientific meaning*, with the original caption quoted
+- **Natural language & academic style (new in v0.3.0)**: forced paragraph prose, scholarly wording, consistent terminology, logical connectors, faithful to the source (SKILL.md §7.1) — no placeholder fragments or colloquialisms
+- **LaTeX formulas (new in v0.3.0)**: key equations written as inline `$…$` / display `$$…$$`, verified with the §7.3 checklist before delivery (dollar pairing, unit escaping, Greek-letter commands); `vault.mjs` warns on unbalanced `$`
 - **Knowledge-graph ready**: YAML frontmatter (title/authors/year/journal/doi/dual Zotero links/collections/tags/status) + `[[wikilink]]` relationship section
 - **Mirrored layout**: `<Vault>/Zotero Notes/<collection path...>/<short-title year>/`, one-to-one with your Zotero tree; images under `assets/<itemKey>/`
 - **Safe writes**: never overwrites existing notes (date-suffixed copies); offline-capable with local PDFs
