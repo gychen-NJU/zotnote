@@ -12,6 +12,7 @@ Zotero item ──▶ PDF (local storage first) ──▶ section/figure extract
 ## ✨ Features
 
 - **Pick and read**: search Zotero items by title / author / keyword; one command runs the whole pipeline
+- **Batch incremental (new!)**: `batch.mjs --collection <dir>` processes *all* articles in a Zotero collection, **auto-skipping those with existing notes** (detected via the `item-key` in Vault note frontmatter — renaming/moving notes never misjudges), idempotent with resume; `--recursive` for sub-collections, `--limit` for batching
 - **Illustrated**: auto-locates and crops every figure/table (caption-aware) — raster images by embedded-image bbox, vector figures by drawing-cluster bbox; 300 dpi exports and a manual `crop` subcommand
 - **Section-by-section template**: each § reserves *main content / scientific question / methods / properties & conclusions / research value*; each figure reserves *content / panel-by-panel explanation / scientific meaning*, with the original caption quoted
 - **Knowledge-graph ready**: YAML frontmatter (title/authors/year/journal/doi/dual Zotero links/collections/tags/status) + `[[wikilink]]` relationship section
@@ -58,6 +59,9 @@ Edit `~/.config/zotnote/config.json`:
 node scripts/zotero.mjs --mode search --query "white-light flare"
 # ② generate the note skeleton in one shot (add --dry-run to preview)
 node scripts/run.mjs --key MYBFJAXP
+# ③ batch incremental: process a whole collection, skipping notes already built
+node scripts/batch.mjs --collection "works" --recursive --dry-run   # preview first
+node scripts/batch.mjs --collection "works" --recursive --limit 5   # 5 per batch
 ```
 
 Then open the note and replace the `<!-- … -->` placeholders with your reading.
@@ -71,6 +75,7 @@ Then open the note and replace the `<!-- … -->` placeholders with your reading
 | `scripts/extract_pdf.py` | PyMuPDF extractor: heading detection (font-size + numbering + word list, noise-filtered), caption localization, raster/vector cropping, manual `crop` subcommand |
 | `scripts/vault.mjs` | Obsidian writer: mirrored directories, asset copy, frontmatter + deep-read template, collision-safe |
 | `scripts/run.mjs` | One-shot pipeline orchestrator |
+| `scripts/batch.mjs` | Batch incremental: whole-collection processing with skip-detection & manifest |
 
 ### Extraction principles
 

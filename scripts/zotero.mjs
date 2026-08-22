@@ -221,6 +221,53 @@ async function cmdInfo(cfg, key) {
   console.log(JSON.stringify(info, null, 2));
 }
 
+/** 枚举 collection 下所有条目（递归子 collection, 自动分页） */
+async function cmdCollection(cfg, coll, recursive, withMeta) {
+  const cols = await allCollections(cfg);
+  const byKey = new Map((cols ?? []).map((c) => [c.key, c]));
+  const target = coll
+    ? (byKey.get(coll) || (cols ?? []).find((c) => c.name === coll))
+    : null;
+  if (!target) fail(`找不到 collection "${coll}"。运行 --mode tree 查看清单。`);
+
+  // 收集目标 key 集合（可递归）
+  const collKeys = new Set([target.key]);
+  if (recursive) {
+    const stack = [target.key];
+    while (stack.length) {
+      const cur = stack.pop();
+      for (const c of (cols ?? [])) {
+        if (c.parentCollection === cur && !collKeys.has(c.key)) {
+          collKeys.add(c.key);
+          stack.push(c.key);
+        }
+      }
+    }
+  }
+
+  const tree = buildTree(cols ?? []);
+  const items = [];
+  for (const ck of collKeys) {
+    let start = 0;
+    for (;;) {
+      const arr = await getJson(cfg, `${BASE}/users/${cfg.zotero.userID}/collections/${ck}/items?start=${start}&limit=100&format=json`);
+      if (!Array.isArray(arr) || arr.length === 0) break;
+      for (const x of arr) {
+        const d = x.data;
+        if (['attachment', 'note'].includes(d.itemType)) continue;
+        items.push(withMeta ? await itemDetail(cfg, d.key) : fmtItem(d, tree));
+      }
+      start += 100;
+      if (arr.length < 100) break;
+      await sleep(200);
+    }
+  }
+  // 去重（同一条目可能挂在多个子 collection）
+  const seen = new Set();
+  const uniq = items.filter((it) => (seen.has(it.key) ? false : (seen.add(it.key), true)));
+  console.log(JSON.stringify({ collection: target.name, key: target.key, recursive: !!recursive, count: uniq.length, items: uniq }, null, 2));
+}
+
 async function cmdTree(cfg) {
   const cols = await allCollections(cfg);
   const tree = buildTree(cols);
@@ -291,6 +338,7 @@ async function main() {
     case 'verify': return await cmdVerify(cfg);
     case 'search': return await cmdSearch(cfg, argOf(argv, '--query') ?? '', Number(argOf(argv, '--limit') ?? 15));
     case 'info': return await cmdInfo(cfg, argOf(argv, '--key'));
+    case 'collection': return await cmdCollection(cfg, argOf(argv, '--collection'), argv.includes('--recursive'), argv.includes('--with-meta'));
     case 'tree': return await cmdTree(cfg);
     case 'pdf': return await cmdPdf(cfg, argOf(argv, '--key'), argOf(argv, '--out') ?? path.join(os.tmpdir(), 'zotnote'), argOf(argv, '--attachment'));
     case 'config': return await cmdConfig(argv.includes('--show') ? '--show' : argv.includes('--init') ? '--init' : null);

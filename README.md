@@ -12,6 +12,7 @@ Zotero 条目 ──▶ PDF（本地 storage 优先）──▶ 章节/图表提
 ## ✨ 特性
 
 - **选择即读**：按文章标题/作者/关键词搜索 Zotero 条目，一条命令完成全流程
+- **批量增量（新！）**：`batch.mjs --collection <目录>` 处理整个 Zotero 文库目录下的所有文章，**自动跳过已经建过笔记的**（按 Vault 笔记 frontmatter `item-key` 判定，改名/移动笔记不误判），幂等可断点续跑，配 `--recursive` 递归子目录、`--limit` 分批
 - **图文并茂**：自动定位并裁剪每张图/表（题注感知），位图走嵌入图、矢量图走绘图包围盒，含 300dpi 高清导出与 `crop` 手工补图子命令
 - **逐节精读模板**：每个 § 预留「主要内容 / 科学问题 / 方法 / 特征性质结论 / 研究价值」；每张图预留「图表内容 / 图内解说 / 科学内涵」三段解说，原题注自动引用
 - **知识图谱就绪**：YAML frontmatter（title/authors/year/journal/doi/zotero 双链接/collections/tags/status）+ `[[wikilink]]` 关联区
@@ -59,6 +60,9 @@ pip install pymupdf        # 图/文提取 (必要)
 node scripts/zotero.mjs --mode search --query "white-light flare"
 # ② 一键生成笔记骨架（--dry-run 先预览）
 node scripts/run.mjs --key MYBFJAXP
+# ③ 批量增量：处理某个文库目录的全部文章, 自动跳过已有笔记的
+node scripts/batch.mjs --collection "works" --recursive --dry-run   # 先预览
+node scripts/batch.mjs --collection "works" --recursive --limit 5   # 每次处理5篇
 ```
 
 随后打开笔记，把 `<!-- … -->` 占位符替换为你的精读内容即可。
@@ -72,6 +76,7 @@ node scripts/run.mjs --key MYBFJAXP
 | `scripts/extract_pdf.py` | PyMuPDF 提取器：章节标题识别（字号+编号+词表，去伪标题）、图/表题注定位、位图/矢量图裁剪、`crop` 手工子命令 |
 | `scripts/vault.mjs` | Obsidian 写入器：目录镜像、图片拷贝、YAML frontmatter + 精读模板骨架、防覆盖 |
 | `scripts/run.mjs` | 一键流水线编排 |
+| `scripts/batch.mjs` | 批量增量：整库目录处理，自动跳过已有笔记（按 frontmatter item-key），产出 manifest |
 
 ### 提取原理
 

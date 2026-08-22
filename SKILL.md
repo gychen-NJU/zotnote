@@ -102,7 +102,37 @@ node scripts/vault.mjs --meta item.json --extract <extractDir> --vault <vaultRoo
 - 条目无 collection → 直接挂在 `<notesRoot>/` 下；
   多 collection → 取最深路径（`preferredCollection` 可指定）。
 
-## 5. 边界与陷阱
+## 5. 批量增量模式（重要！）
+
+用户要求"处理某个文库目录下所有文章"时，**不要逐篇手动跑 run.mjs**，用
+`batch.mjs` 一键批量+自动跳过：
+
+```bash
+# 预览: 将处理哪些 / 跳过哪些
+node <installDir>/scripts/batch.mjs --collection <key|名称> --dry-run [--recursive]
+# 真跑: 每个新条目自动 取PDF→提取→生成笔记骨架, 已建笔记的自动跳过
+node <installDir>/scripts/batch.mjs --collection <key|名称> [--recursive]
+# 控制节奏: 本次最多处理 N 篇 (适合分批+每篇精读)
+node <installDir>/scripts/batch.mjs --collection <key|名称> --limit 10
+```
+
+**增量机制（核心设计）**：
+
+- `collection` 可传 key 或名称，默认**只处理该目录直属条目**；
+  加 `--recursive` 递归所有子 collection（如 `works/` 下一整棵树）。
+- **"已有笔记"判定**：扫描 `<vault>/<notesRoot>/` 下所有 .md 的 YAML
+  frontmatter `item-key`，命中即跳过。用户改名/移动笔记文件也不会误判；
+  `assets/<itemKey>/` 目录作为第二重参考。
+- **幂等**：跑过一遍后再跑，已处理条目全部进 skipped，天然断点续跑；
+  配合 `--limit` 可一篇文章一篇文章地补齐，每批跑完向用户汇报进度。
+- 每次处理输出 `manifest.json`（工作目录下），记录
+  processed/failed/pending 清单，供逐篇精读安排。
+
+**批量后的精读顺序**：批量只生成骨架（自动部分），内容精读仍由你完成——
+按 manifest 逐篇读 `extractDir/fulltext.md` → 填空 → wikilink。建议每批
+3-5 篇精读后再处理下一批，避免上下文过长。
+
+## 6. 边界与陷阱
 
 - **Zotero API key**：只读需求足够；extract/搜索不需要写权限。
 - **PDF 优先本地**：`storagePath` 命中可离线工作；miss 时走 `/files` 下载，
@@ -117,13 +147,13 @@ node scripts/vault.mjs --meta item.json --extract <extractDir> --vault <vaultRoo
 - **长文分步**：>40 页论文建议先写摘要+前三章，再分段补完，避免一次吃掉
   全部上下文。
 
-## 6. 与 arxiv-checkup 的关系
+## 7. 与 arxiv-checkup 的关系
 
 `arxiv-checkup` 负责"检索→筛选→入库 Zotero"，`zotnote` 负责"Zotero 条目→
 精读→Obsidian 笔记"。二者共享同一份 Zotero 文库：用户说"把 arXiv 巡检收的
 文章拿来精读"时，先用 arxiv-checkup 确认条目已入库，再用 zotnote 精读。
 
-## 7. 参考
+## 8. 参考
 
 - 安装与更新：见仓库 README.md / README.en.md
 - Obsidian 侧建议开启：属性(core plugins)→Frontmatter；图谱视图观察

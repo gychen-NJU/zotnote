@@ -1,34 +1,35 @@
-{
-  "name": "zotnote",
-  "version": "0.1.0",
-  "description": "Zotero deep-reading notes generator skill: pick articles from Zotero library, extract sections and all figures/tables from PDF, generate illustrated Markdown reading notes mirrored into an Obsidian Vault for the knowledge graph.",
-  "type": "module",
-  "license": "MIT",
-  "author": "gychen-NJU",
-  "engines": {
-    "node": ">=22"
-  },
-  "keywords": [
-    "zotero",
-    "obsidian",
-    "skill",
-    "agent",
-    "reading-notes",
-    "literature-notes",
-    "knowledge-graph",
-    "paper-notes",
-    "deepseek-harness",
-    "pymupdf"
-  ],
-  "files": [
-    "SKILL.md",
-    "scripts",
-    "README.md",
-    "README.en.md",
-    "LICENSE"
-  ],
-  "scripts": {
-    "verify": "node scripts/zotero.mjs --mode verify",
-    "demo": "node scripts/run.mjs --key MYBFJAXP --dry-run"
-  }
+﻿{
+    "name":  "zotnote",
+    "version":  "0.2.0",
+    "description":  "Zotero deep-reading notes generator skill: pick articles from Zotero library, extract sections and all figures/tables from PDF, generate illustrated Markdown reading notes mirrored into an Obsidian Vault for the knowledge graph.",
+    "type":  "module",
+    "license":  "MIT",
+    "author":  "gychen-NJU",
+    "engines":  {
+                    "node":  "\u003e=22"
+                },
+    "keywords":  [
+                     "zotero",
+                     "obsidian",
+                     "skill",
+                     "agent",
+                     "reading-notes",
+                     "literature-notes",
+                     "knowledge-graph",
+                     "paper-notes",
+                     "deepseek-harness",
+                     "pymupdf"
+                 ],
+    "files":  [
+                  "SKILL.md",
+                  "scripts",
+                  "README.md",
+                  "README.en.md",
+                  "LICENSE"
+              ],
+    "scripts":  {
+                    "verify":  "node scripts/zotero.mjs --mode verify",
+                    "demo":  "node scripts/run.mjs --key MYBFJAXP --dry-run",
+                    "batch":  "node scripts/batch.mjs --collection papers --dry-run"
+                }
 }
