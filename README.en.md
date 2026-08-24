@@ -9,6 +9,18 @@ Zotero item ──▶ PDF (local storage first) ──▶ section/figure extract
               zotero.mjs                     extract_pdf.py                vault.mjs / run.mjs
 ```
 
+## 🖼️ Demo
+
+A real screenshot of a deep-reading note rendered in Obsidian:
+
+![Reading note snippet](assets/demo-note-snippet.png)
+
+> ⚠️ **Note: the screenshot above shows only a fragment (the TL;DR / summary part) of the full note**, just to give a quick sense of the look & feel. For the **complete note** (section-by-section reading, all figure explanations, LaTeX formulas, linked notes, etc.), please open the full demo document: [📄 View the full note demo.md](doc/demo.md) (the PRO-GAN paper reading note in this repo).
+
+Notes also plug into the Obsidian knowledge graph — the figure below shows a real graph view of the notes' relationship network:
+
+![Obsidian relationship graph](assets/demo-obsidian-graph.png)
+
 ## ✨ Features
 
 - **Pick and read**: search Zotero items by title / author / keyword; one command runs the whole pipeline

@@ -9,6 +9,21 @@ Zotero 条目 ──▶ PDF（本地 storage 优先）──▶ 章节/图表提
               zotero.mjs                extract_pdf.py          vault.mjs / run.mjs
 ```
 
+## 🖼️ 效果展示
+
+下图是 Obsidian 中一篇精读笔记的**真实效果截图**：
+
+![精读笔记片段](assets/demo-note-snippet.png)
+
+> ⚠️ **注意：上面截图只是完整笔记的一个片段（速览/归纳部分）**，仅用于快速展示
+> 整体观感。该笔记的**完整效果**（逐节精读、全部图表详解、LaTeX 公式、关联笔记等）
+> 请点击浏览完整笔记文档：[📄 查看完整笔记 demo.md](doc/demo.md)（以本仓库
+> 的 PRO-GAN 论文精读笔记为例）。
+
+完整笔记同样接入 Obsidian 知识图谱，下图是新笔记在 Obsidian 图谱视图中的真实关系网络效果：
+
+![Obsidian 关系谱图](assets/demo-obsidian-graph.png)
+
 ## ✨ 特性
 
 - **选择即读**：按文章标题/作者/关键词搜索 Zotero 条目，一条命令完成全流程
