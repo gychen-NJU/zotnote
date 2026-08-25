@@ -72,6 +72,60 @@ function frontmatter(meta, zoteroUid) {
   ].join('\n');
 }
 
+/**
+ * 把图/表按 PDF 页码归属到对应章节: 图页码落在 [该节起始页, 下一节起始页) 区间,
+ * 无匹配则归到"页码不大于图页的最近章节"（参考文献/图表区之前的最后正文节）。
+ * 返回 Map<sectionTitle, figures[]>
+ */
+function mapFiguresToSections(sections, figures) {
+  const map = new Map();
+  const ordered = (sections ?? []).slice().sort((a, b) => a.page - b.page);
+  // 章节标题去重（同一标题取第一次出现）
+  const headSeen = new Set();
+  const cleaned = [];
+  for (const s of ordered) {
+    if (!s.page || headSeen.has(s.title)) continue;
+    headSeen.add(s.title);
+    cleaned.push(s);
+  }
+  for (const f of figures ?? []) {
+    if (!f.page) continue;
+    let best = null;
+    for (let i = 0; i < cleaned.length; i++) {
+      const start = cleaned[i].page;
+      const end = i + 1 < cleaned.length ? cleaned[i + 1].page : Infinity;
+      if (f.page >= start && f.page < end) { best = cleaned[i]; break; }
+    }
+    if (!best) {
+      // 兜底: 最近的前置章节
+      for (let i = cleaned.length - 1; i >= 0; i--) {
+        if (cleaned[i].page <= f.page) { best = cleaned[i]; break; }
+      }
+    }
+    const key = best ? best.title : '__ROOT__';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(f);
+  }
+  return map;
+}
+
+function figureBlock(meta, f) {
+  const lines = [];
+  lines.push(`### ${f.kind === 'table' ? '表' : '图'} ${f.label}（第 ${f.page} 页）`);
+  lines.push('');
+  lines.push(`> [!quote] 原题注：${f.caption}`);
+  lines.push('');
+  lines.push(`![${f.caption.slice(0, 60)}](assets/${meta.key}/${f.file})`);
+  lines.push('');
+  lines.push('**图表内容**：<!-- 图中画了什么（坐标轴、曲线、数据构成） -->');
+  lines.push('');
+  lines.push('**图内解说**：<!-- 从左到右/从整体到局部, 逐元素解释 -->');
+  lines.push('');
+  lines.push('**科学内涵**：<!-- 这张图支撑了什么结论/体现什么特征 -->');
+  lines.push('');
+  return lines;
+}
+
 function noteBodyAssembly(meta, sections, figures, zoteroUid) {
   const lines = [];
   lines.push(`# ${meta.title}`);
@@ -91,6 +145,10 @@ function noteBodyAssembly(meta, sections, figures, zoteroUid) {
   lines.push('');
   lines.push('## 🧭 章节精读');
   lines.push('');
+  lines.push('> [!tip] 图文随章节：每张图/表已归属到其出现的章节下方, 阅读时可直接对照。');
+  lines.push('');
+  const figMap = mapFiguresToSections(sections, figures);
+  const orphanFigs = figMap.get('__ROOT__') ?? [];
   if (sections.length) {
     let cur = '';
     for (const s of sections) {
@@ -118,31 +176,36 @@ function noteBodyAssembly(meta, sections, figures, zoteroUid) {
       lines.push('');
       lines.push('表示质量守恒: 密度的时间变化率与质量通量散度之和为零。 -->');
       lines.push('');
+      const figs = figMap.get(s.title) ?? [];
+      if (figs.length) {
+        lines.push('**涉及图表**：');
+        lines.push('');
+        for (const f of figs) {
+          lines.push(`- 图 ${f.label}（第 ${f.page} 页, 见下方详解）`);
+        }
+        lines.push('');
+        for (const f of figs) {
+          lines.push(...figureBlock(meta, f));
+          lines.push('');
+        }
+      }
     }
   } else {
     lines.push('<!-- 未识别到章节标题, 请按论文实际结构手动拆分, 逐节填写 -->');
     lines.push('');
   }
-  lines.push('## 🖼️ 图表详解');
-  lines.push('');
-  if (figures.length) {
-    for (const f of figures) {
-      lines.push(`### ${f.kind === 'table' ? '表' : '图'} ${f.label}（第 ${f.page} 页）`);
-      lines.push('');
-      lines.push(`> [!quote] 原题注：${f.caption}`);
-      lines.push('');
-      lines.push(`![${f.caption.slice(0, 60)}](assets/${meta.key}/${f.file})`);
-      lines.push('');
-      lines.push('**图表内容**：<!-- 图中画了什么（坐标轴、曲线、数据构成） -->');
-      lines.push('');
-      lines.push('**图内解说**：<!-- 从左到右/从整体到局部, 逐元素解释 -->');
-      lines.push('');
-      lines.push('**科学内涵**：<!-- 这张图支撑了什么结论/体现什么特征 -->');
+  // 未匹配到章节的图（sections 缺失或页码异常）集中收尾, 避免丢图
+  if (orphanFigs.length) {
+    lines.push('## 🖼️ 未归属章节的图表');
+    lines.push('');
+    lines.push('<!-- 以下图/表未能归属到具体章节（通常是 pagination 识别问题）, 请手动移入对应 § 下。 -->');
+    lines.push('');
+    for (const f of orphanFigs) {
+      lines.push(...figureBlock(meta, f));
       lines.push('');
     }
-  } else {
-    lines.push('<!-- 未识别到图/表。请阅读 PDF 后人工截图, 或调用 extract_pdf.py crop 补图 -->');
-    lines.push('');
+  } else if (!sections.length && figures.length) {
+    // 无章节但有图: 全部图都进了 __ROOT__（上面已处理）, 无需重复
   }
   lines.push('## 🔬 特征、性质与研究价值');
   lines.push('');
